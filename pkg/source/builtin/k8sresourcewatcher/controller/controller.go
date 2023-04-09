@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/oam-dev/kubevela-core-api/apis/core.oam.dev/v1beta1"
 	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -35,6 +34,8 @@ import (
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/cache"
+
+	"github.com/oam-dev/kubevela-core-api/apis/core.oam.dev/v1beta1"
 
 	"github.com/kubevela/kube-trigger/api/v1alpha1"
 	"github.com/kubevela/kube-trigger/pkg/eventhandler"
@@ -60,7 +61,7 @@ type Controller struct {
 }
 
 func init() {
-	v1beta1.AddToScheme(scheme.Scheme)
+	_ = v1beta1.AddToScheme(scheme.Scheme)
 }
 
 // Setup prepares controllers
@@ -199,6 +200,7 @@ func (c *Controller) processNextItem() bool {
 
 	meta := utils.GetObjectMetaData(newEvent.(types.InformerEvent).EventObj)
 	err := c.processItem(newEvent.(types.InformerEvent))
+	//nolint:gocritic
 	if err == nil {
 		// No error, reset the ratelimit counters
 		c.queue.Forget(newEvent)
@@ -248,7 +250,7 @@ func (c *Controller) callEventHandler(obj metav1.Object, e types.Event) {
 	for _, fn := range c.eventHandlers {
 		err := fn(c.controllerType, e, obj)
 		if err != nil {
-			c.logger.Warnf("calling event handler failed: %s", err)
+			c.logger.Infof("calling event handler failed: %s", err)
 		}
 	}
 }

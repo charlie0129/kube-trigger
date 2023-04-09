@@ -21,6 +21,7 @@ import (
 
 	// To make go mod tidy happy. This is caused by upstream dependencies in KubeVela.
 	_ "cloud.google.com/go"
+
 	"github.com/kubevela/kube-trigger/pkg/cmd"
 )
 
