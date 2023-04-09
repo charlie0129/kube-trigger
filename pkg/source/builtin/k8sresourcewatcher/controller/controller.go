@@ -111,12 +111,12 @@ func newResourceController(logger *logrus.Entry, informer cache.SharedIndexInfor
 	queue := workqueue.NewRateLimitingQueue(workqueue.DefaultControllerRateLimiter())
 	var newEvent types.InformerEvent
 	var err error
-	informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
+	_, _ = informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			newEvent.Type = types.EventTypeCreate
 			newEvent.EventObj = obj
-			meta := utils.GetObjectMetaData(obj)
-			logger.Tracef("received add event: %v %s/%s", kind, meta.GetName(), meta.GetNamespace())
+			objmeta := utils.GetObjectMetaData(obj)
+			logger.Tracef("received add event: %v %s/%s", kind, objmeta.GetName(), objmeta.GetNamespace())
 			if err == nil {
 				queue.Add(newEvent)
 			}
@@ -124,8 +124,8 @@ func newResourceController(logger *logrus.Entry, informer cache.SharedIndexInfor
 		UpdateFunc: func(old, new interface{}) {
 			newEvent.Type = types.EventTypeUpdate
 			newEvent.EventObj = new
-			meta := utils.GetObjectMetaData(new)
-			logger.Tracef("received update event: %v %s/%s", kind, meta.GetName(), meta.GetNamespace())
+			objmeta := utils.GetObjectMetaData(new)
+			logger.Tracef("received update event: %v %s/%s", kind, objmeta.GetName(), objmeta.GetNamespace())
 			if err == nil {
 				queue.Add(newEvent)
 			}
@@ -133,8 +133,8 @@ func newResourceController(logger *logrus.Entry, informer cache.SharedIndexInfor
 		DeleteFunc: func(obj interface{}) {
 			newEvent.Type = types.EventTypeDelete
 			newEvent.EventObj = obj
-			meta := utils.GetObjectMetaData(obj)
-			logger.Tracef("received delete event: %v %s/%s", kind, meta.GetName(), meta.GetNamespace())
+			objmeta := utils.GetObjectMetaData(obj)
+			logger.Tracef("received delete event: %v %s/%s", kind, objmeta.GetName(), objmeta.GetNamespace())
 			if err == nil {
 				queue.Add(newEvent)
 			}
@@ -193,6 +193,7 @@ func (c *Controller) processNextItem() bool {
 
 	meta := utils.GetObjectMetaData(newEvent.(types.InformerEvent).EventObj)
 	err := c.processItem(newEvent.(types.InformerEvent))
+	//nolint:gocritic // no need to switch to "switch" statements here
 	if err == nil {
 		// No error, reset the ratelimit counters
 		c.queue.Forget(newEvent)
